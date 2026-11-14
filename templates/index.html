@@ -1,0 +1,539 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SpamShield - Email Spam Detector</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="/" class="logo">🛡 SpamShield</a>
+
+        <div class="nav-links">
+            <a href="#home">Home</a>
+            <a href="#dashboard">Dashboard</a>
+            <a href="#detector">Detector</a>
+            <a href="#about">About</a>
+            <a href="#history">History</a>
+        </div>
+
+        <a href="#detector" class="nav-button">
+            Check Email
+        </a>
+    </nav>
+
+
+    <main>
+
+        <!-- HERO SECTION -->
+        <section class="hero" id="home">
+
+            <div class="hero-copy">
+
+                <span class="eyebrow">
+                    MACHINE LEARNING EMAIL SECURITY
+                </span>
+
+                <h1>
+                    Detect Spam Emails
+                    <span>Instantly.</span>
+                </h1>
+
+                <p>
+                    Protect yourself from unwanted and suspicious
+                    messages using machine learning technology.
+                </p>
+
+                <a href="#detector" class="primary-button">
+                    Check Your Email →
+                </a>
+
+            </div>
+
+            <div class="hero-card">
+
+                <div class="shield">🛡️</div>
+
+                <h2>Smart Message Analysis</h2>
+
+                <p>TF-IDF + Naive Bayes Classifier</p>
+
+                <span class="ready">
+                    ● Model Ready
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- DASHBOARD SECTION -->
+        <section class="dashboard-section" id="dashboard">
+
+            <div class="section-heading">
+
+                <span class="eyebrow">
+                    PROJECT ANALYTICS
+                </span>
+
+                <h2>SpamShield Dashboard</h2>
+
+                <p>
+                    Monitor your email detection statistics.
+                </p>
+
+            </div>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <h3>Model Accuracy</h3>
+                    <div class="stat-number">{{ accuracy }}%</div>
+                    <p>Test dataset accuracy</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Total Messages</h3>
+                    <div class="stat-number">{{ total_messages }}</div>
+                    <p>Messages analyzed</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Spam Detected</h3>
+                    <div class="stat-number">{{ spam_count }}</div>
+                    <p>Spam messages</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Safe Messages</h3>
+                    <div class="stat-number">{{ safe_count }}</div>
+                    <p>Not spam messages</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- DETECTOR SECTION -->
+        <section class="detector-section" id="detector">
+
+            <div class="section-heading">
+
+                <span class="eyebrow">
+                    EMAIL ANALYZER
+                </span>
+
+                <h2>Check Your Message</h2>
+
+                <p>
+                    Enter the sender email and paste your message below.
+                </p>
+
+            </div>
+
+            <div class="detector-card">
+
+                <!-- EMAIL ANALYSIS FORM -->
+                <form method="POST" action="/">
+
+                    <div class="form-group">
+
+                        <label for="sender_email">
+                            Sender Email Address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="sender_email"
+                            name="sender_email"
+                            placeholder="example@gmail.com"
+                            value="{{ sender_email or '' }}"
+                            required
+                        >
+
+                    </div>
+
+                    <label for="message">
+                        Email or Message Content
+                    </label>
+
+                    <textarea
+                        id="message"
+                        name="message"
+                        maxlength="10000"
+                        placeholder="Paste your email or message here..."
+                        required>{{ message or '' }}</textarea>
+
+                    <div class="form-footer">
+
+                        <span id="counter">
+                            0 / 10000 characters
+                        </span>
+
+                        <button type="submit" class="primary-button">
+                            Analyze Email →
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+                <!-- RESULT SECTION -->
+                {% if result %}
+
+                <div class="result
+                    {% if result.label == 'SPAM' %}spam
+                    {% elif result.label == 'NOT SPAM' %}ham
+                    {% else %}spam{% endif %}">
+
+                    <span class="eyebrow">
+                        PREDICTION RESULT
+                    </span>
+
+                    <h2>
+                        {{ result.label }}
+                    </h2>
+
+                    <p>
+                        Model Confidence:
+                        <strong>{{ result.confidence }}%</strong>
+                    </p>
+
+                    <div class="progress">
+                    <span class="progress-fill"
+                   data-width="{{ result.confidence }}"></span>
+                    </div>
+
+                    <small>
+                        Estimated Spam Probability:
+                        {{ result.spam_probability }}%
+                    </small>
+
+
+                    <!-- SENDER EMAIL VERIFICATION -->
+                    <div class="sender-result">
+
+                        <h3>Sender Email Verification</h3>
+
+                        <p>
+                            <strong>Sender:</strong>
+                            {{ result.sender_email }}
+                        </p>
+
+                        <p>
+                            <strong>Status:</strong>
+
+                            <span class="history-badge
+                                {% if result.sender_status == 'SUSPICIOUS' or result.sender_status == 'INVALID' %}
+                                    spam
+                                {% else %}
+                                    safe
+                                {% endif %}">
+                                {{ result.sender_status }}
+                            </span>
+                        </p>
+
+                        <p>
+                            <strong>Warning:</strong>
+                            {{ result.sender_warning }}
+                        </p>
+
+                        <p>
+                            <strong>Risk Level:</strong>
+
+                            <span class="risk-badge
+                                {% if result.risk_level == 'HIGH' %}
+                                    high
+                                {% elif result.risk_level == 'MEDIUM' %}
+                                    medium
+                                {% else %}
+                                    low
+                                {% endif %}">
+                                {{ result.risk_level }}
+                            </span>
+                        </p>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+            <p class="disclaimer">
+                Educational prototype only. This model uses a small
+                sample dataset and can make mistakes. A NOT SPAM
+                result does not guarantee that a message is safe.
+            </p>
+
+        </section>
+
+
+        <!-- FEATURES SECTION -->
+        <section class="features" id="about">
+
+            <div class="section-heading">
+
+                <span class="eyebrow">
+                    PROJECT FEATURES
+                </span>
+
+                <h2>How SpamShield Works</h2>
+
+            </div>
+
+            <div class="feature-grid">
+
+                <article class="feature-card">
+                    <div>🤖</div>
+                    <h3>ML Classification</h3>
+                    <p>
+                        Uses a Naive Bayes machine learning model
+                        to classify messages.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div>⚡</div>
+                    <h3>Quick Prediction</h3>
+                    <p>
+                        Analyzes messages and displays predictions
+                        quickly.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div>📊</div>
+                    <h3>Probability Score</h3>
+                    <p>
+                        Displays the estimated spam probability
+                        of each message.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div>📧</div>
+                    <h3>Sender Verification</h3>
+                    <p>
+                        Checks email format and warns about
+                        suspicious lookalike domains.
+                    </p>
+                </article>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- DETECTION HISTORY -->
+    <section class="history-section" id="history">
+
+        <div class="section-heading">
+
+            <span class="eyebrow">RECENT ACTIVITY</span>
+
+            <h2>Detection History</h2>
+
+            <p>Search and manage your analyzed messages</p>
+
+        </div>
+
+        <div class="history-card">
+
+            <!-- CLEAR ALL HISTORY -->
+            <div class="clear-history-wrapper">
+
+                <form action="{{ url_for('clear_history') }}"
+                      method="POST"
+                      onsubmit="return confirm('Are you sure you want to delete all history?');">
+
+                    <button type="submit"
+                            class="delete-button clear-all-button">
+                        Clear All History
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- SEARCH AND FILTER -->
+            <form method="GET" action="/" class="history-controls">
+
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search messages or sender..."
+                    value="{{ search }}"
+                >
+
+                <select name="filter">
+
+                    <option value="ALL"
+                        {% if filter_type == 'ALL' %}selected{% endif %}>
+                        All Messages
+                    </option>
+
+                    <option value="SPAM"
+                        {% if filter_type == 'SPAM' %}selected{% endif %}>
+                        Spam Only
+                    </option>
+
+                    <option value="NOT SPAM"
+                        {% if filter_type == 'NOT SPAM' %}selected{% endif %}>
+                        Safe Only
+                    </option>
+
+                </select>
+
+                <button type="submit" class="primary-button">
+                    Search / Filter
+                </button>
+
+                <a href="/#history" class="history-reset">
+                    Reset
+                </a>
+
+            </form>
+
+
+            <!-- HISTORY TABLE -->
+            {% if history %}
+
+            <div class="history-table-wrapper">
+
+                <table class="history-table">
+
+                    <thead>
+                        <tr>
+                            <th>Sender Email</th>
+                            <th>Message</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                            <th>Risk Level</th>
+                            <th>Date & Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in history %}
+
+                        <tr>
+
+                            <td>
+                                {{ item[7] or 'N/A' }}
+                            </td>
+
+                            <td class="history-message">
+                                {{ item[1] }}
+                            </td>
+
+                            <td>
+
+                                <span class="history-badge
+                                    {% if item[2] == 'SPAM' %}spam{% else %}safe{% endif %}">
+
+                                    {{ item[2] }}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(item[3]) }}%
+                            </td>
+
+                            <td>
+
+                                <span class="risk-badge
+                                    {% if item[6] == 'HIGH' %}
+                                        high
+                                    {% elif item[6] == 'MEDIUM' %}
+                                        medium
+                                    {% else %}
+                                        low
+                                    {% endif %}">
+
+                                    {{ item[6] or 'UNKNOWN' }}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+                                {{ item[5] }}
+                            </td>
+
+                            <td>
+
+                                <form
+                                    action="{{ url_for('delete_history', record_id=item[0]) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Delete this message?');">
+
+                                    <button type="submit" class="delete-button">
+                                        Delete
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <p class="empty-history">
+                No matching messages found.
+            </p>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <strong>🛡 SpamShield</strong>
+
+        <p>
+            Spam Email Detection Using Machine Learning
+            | Student Mini Project
+        </p>
+
+    </footer>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>
