@@ -1,10 +1,12 @@
 
 import pandas as pd
+from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
+
 from sklearn.metrics import (
     accuracy_score,
     confusion_matrix,
@@ -16,10 +18,31 @@ class SpamDetector:
 
     def __init__(self):
 
-        self.data = pd.read_csv("data/messages.csv")
+        # Get project directory
+        BASE_DIR = Path(__file__).resolve().parent
+
+        # Get dataset path
+        DATASET_PATH = BASE_DIR / "data" / "messages.csv"
+
+        # Check dataset exists
+        if not DATASET_PATH.exists():
+            raise FileNotFoundError(
+                f"Dataset not found: {DATASET_PATH}"
+            )
+
+        # Load dataset
+        self.data = pd.read_csv(DATASET_PATH)
+
+        # Validate dataset columns
+        required_columns = {"message", "label"}
+
+        if not required_columns.issubset(self.data.columns):
+            raise ValueError(
+                "Dataset must contain message and label columns"
+            )
 
         self.texts = self.data["message"].astype(str)
-        self.labels = self.data["label"].str.lower()
+        self.labels = self.data["label"].astype(str).str.lower().str.strip()
 
         # Split dataset into training and testing data
         X_train, X_test, y_train, y_test = train_test_split(
@@ -47,6 +70,7 @@ class SpamDetector:
 
         # Calculate accuracy
         accuracy = accuracy_score(y_test, y_pred)
+
         self.accuracy = round(accuracy * 100, 2)
 
         print("\nModel Training Completed!")
