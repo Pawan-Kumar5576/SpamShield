@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 detector = SpamDetector()
 
-DATABASE = "spamshield.db"
+DATABASE = "/tmp/spamshield.db"
 
 # Known domains for basic lookalike checking
 TRUSTED_DOMAINS = [
